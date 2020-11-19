@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
+from rest_framework_simplejwt.tokens import RefreshToken
+
 from util.models import Timestamps
 
 class UserManager(BaseUserManager):
@@ -17,12 +19,22 @@ class UserManager(BaseUserManager):
         return user
 
 
-    def create_superuser(self, username, email, password=None):
+    # def create_superuser(self, username, email, password=None):
+    #     if not password:
+    #         raise TypeError("Password cannot be none")
+
+    #     user = self.create_user(username, email, password)
+    #     user.is_superuser = True
+    #     user.is_staff = True
+    #     user.save()
+
+    #     return user
+
+    def create_staff(self, username, email, password=None):
         if not password:
             raise TypeError("Password cannot be none")
 
         user = self.create_user(username, email, password)
-        user.is_superuser = True
         user.is_staff = True
         user.save()
 
@@ -58,7 +70,13 @@ class User(Timestamps,AbstractBaseUser, PermissionsMixin):
         return True
 
     def tokens(self):
-        return ''
+        refresh = RefreshToken.for_user(self)
+
+        return {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token)
+        }
+
 
 
 class UserProfile(models.Model):
@@ -72,6 +90,10 @@ class UserProfile(models.Model):
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
 
+    def __str__(self):
+        return str(self.first_name) + ' ' + str(self.last_name)
+
+
 class StaffProfile(models.Model):
     user = models.OneToOneField(
         User,
@@ -82,3 +104,6 @@ class StaffProfile(models.Model):
 
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return str(self.first_name) + ' ' + str(self.last_name)

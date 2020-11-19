@@ -149,13 +149,18 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
+# swagger configurations
+LOGIN_URL = 'account-login'
+BASE_URL: 'localhost:8000/api/v1/account'
+# LOGOUT_URL = 'rest_framework:logout'
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Nairobi'
 
 USE_I18N = True
 
