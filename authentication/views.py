@@ -1,22 +1,34 @@
 from django.conf import settings
 from django.urls import reverse
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.encoding import smart_str, force_str, smart_bytes, DjangoUnicodeDecodeError
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.sites.shortcuts import get_current_site
 
 from rest_framework import viewsets, status, generics
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.sites.shortcuts import get_current_site
 
 import jwt
 
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-from .serializers import UserSerializer, LoginSerializer,StaffSerializer
+from .serializers import (
+    UserSerializer, 
+    LoginSerializer,
+    StaffSerializer, 
+    PasswordResetSerializer
+)
 from .models import User
 from .helper import Helper
 
+from renderers import UserRenderer
+
 class RegisterUserView(viewsets.ViewSet):
+
+    renderer_classes = (UserRenderer,)
 
     @swagger_auto_schema(request_body=LoginSerializer)
     @action(methods=['POST'], detail=False, url_path='login', url_name='login')
@@ -87,3 +99,31 @@ class RegisterUserView(viewsets.ViewSet):
         except jwt.DecodeError as e:
             print(e)
             return Response({'error':"INVALID token"}, status=status.HTTP_400_BAD_REQUEST)
+
+    @swagger_auto_schema(request_body=PasswordResetSerializer)
+    @action(methods=['POST'], detail=False, url_path='reset-password', url_name='reset_password')
+    def password_reset(self, request):
+        serializer = PasswordResetSerializer(data=request.data)
+
+        email = request.data['email']
+        if User.objects.filter(email=email).exists():
+            user = User.objects.get(email=email)
+            uidb64 = urlsafe_base64_encode(smart_bytes(user.id))
+            token = PasswordResetTokenGenerator().make_token(user)
+
+            current_site = get_current_site(request).domain
+            relative_link = reverse(
+                'account-confirm_password_reset', args={'uidb64': uidb64, 'token': token})
+
+            absolute_url = 'http://' + current_site + relative_link
+            email_body = 'Hi\n\n Use the link below to reset your password\n\n' + absolute_url
+            data = {'email_body': email_body, 'to_email': user.email,
+                    'email_subject': "Reset Password"}
+
+            Helper.send_email(data)
+
+        return Response({'detail':'A link was sent to your email'}, status=status.HTTP_200_OK)
+    
+    @action(methods=['GET'], detail=False, url_path=r'confirm-password-reset/(?P<uidb64>)/(?P<token>)$', url_name='confirm_password_reset')
+    def password_reset_confirm(self, request, uidb64, token):
+        pass

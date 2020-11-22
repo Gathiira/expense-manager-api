@@ -6,7 +6,4 @@ from .views import RegisterUserView
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'account', RegisterUserView, basename='account')
 
-
-urlpatterns = [
-    path('', include(router.urls)),
-]
+urlpatterns = router.urls

@@ -18,6 +18,8 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['email','username','password','user_profile']
 
+        lookup_field='id'
+
 
     def validate(self, attrs):
         email = attrs.get('email', '')
@@ -90,4 +92,11 @@ class LoginSerializer(serializers.ModelSerializer):
                 'tokens': user.tokens,
             }
         raise AuthenticationFailed("User not found, please REGISTER")
+
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=68, min_length=5)
+    class Meta:
+        fields = 'email'
+
+
         
