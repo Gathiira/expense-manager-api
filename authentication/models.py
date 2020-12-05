@@ -19,14 +19,14 @@ class UserManager(BaseUserManager):
         return user
 
 
-    # def create_superuser(self, username, email, password=None):
-    #     if not password:
-    #         raise TypeError("Password cannot be none")
+    def create_superuser(self, username, email, password=None):
+        if not password:
+            raise TypeError("Password cannot be none")
 
-    #     user = self.create_user(username, email, password)
-    #     user.is_superuser = True
-    #     user.is_staff = True
-    #     user.save()
+        user = self.create_user(username, email, password)
+        user.is_superuser = True
+        user.is_staff = True
+        user.save()
 
     #     return user
 
